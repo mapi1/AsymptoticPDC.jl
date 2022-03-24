@@ -2,3 +2,15 @@ name = "PDC"
 uuid = "af3b36d7-5059-4fcf-8949-d98b87e6cfd5"
 authors = ["Marius Pille <marius.pille@hu-berlin.de>"]
 version = "0.1.0"
+
+[deps]
+DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+ShiftedArrays = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
