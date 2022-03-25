@@ -1,6 +1,6 @@
 
 """
-pdc(u::Matrix{<:Real}; nFreqs::Int = 124, metric::String = "euc", maxorder::Int = 30, criterion::Union{Nothing, String} = "AIC", method::String = "NS")
+pdc(u::Matrix{<:Real}; nFreqs::Int = 128, metric::String = "euc", maxorder::Int = 30, criterion::Union{Nothing, String} = "AIC", method::String = "NS")
 
 Computes the partial directed coherence pdc based on a multivariate AR model of the input matrix u containing the signals/channels xi, u = [x1 x2 ... xn] 
 
@@ -31,7 +31,7 @@ Return the tuple (pdc , spectra, coh), where:
 * spectra: (Cross-) spectra of the signals [n x n x nFreqs]
 * coh: normal coherence [n x n x nFreqs]
 """
-function pdc(u::Matrix{<:Real}; nFreqs::Int = 124, metric::String = "euc", maxorder::Int = 30, criterion::Union{Nothing, String} = "AIC", method::String = "NS")
+function pdc(u; nFreqs::Int = 128, metric::String = "euc", maxorder::Int = 30, criterion::Union{Nothing, String} = "AIC", method::String = "NS")
     len, nChannels = size(u) 
     order,pf,A,ef,vic,Vicv = mvar(u, maxorder = maxorder, criterion = criterion, method = method)
     

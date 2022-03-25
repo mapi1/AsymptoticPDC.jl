@@ -1,5 +1,8 @@
 
 
+"""
+pdcplot(pdc, spectra)
+"""
 @userplot PDCplot
 
 @recipe function f(h::PDCplot; sf = nothing, f_range = (0, 0.5), cnames = nothing)
@@ -47,7 +50,7 @@
         else
             @series begin
                 subplot := ((i-1)*nChannels + j)
-                label := "S$(cnames[i])(f)"
+                label := "S $(cnames[i])(f)"
                 seriescolor := :black
                 linewidth := 2
                 if j == 1 
