@@ -86,3 +86,32 @@ function get_Z(u, order)
     end
     return Z
 end
+
+function dmatrix(m)
+    D = zeros(m^2, Int(m * (m + 1) / 2))
+    u = hcat([[i, j] for i in 1:m, j in 1:m]...)'
+    w = hcat([[j, i] for i in 1:m, j in 1:m if i >= j]...)'
+    v = reverse(w, dims = 2)
+    for i=1:m*m
+        for j=1:Int(m*(m+1)/2)
+            if sum(u[i,:] .== v[j,:]) == 2
+                D[i,j]=1
+            end
+        end
+        for j=1:Int(m*(m+1)/2)
+            if sum(u[i,:] .== w[j,:]) == 2
+                D[i,j]=1
+            end
+        end
+    end
+    return D
+end
+
+function vech(Y)
+    m, n = size(Y);
+    y = eltype(Y)[]
+    for i=1:m
+        push!(y, Y[i:n,i]...)
+    end
+    return y
+end

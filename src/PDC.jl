@@ -18,5 +18,5 @@ export mvar
 export pdcplot, pdcplot!
 export detrend, detrend!
 export get_sunspot_melanoma_data
-export granger_causality_test
+export granger_causality_test, instantaneous_granger_causality_test
 end # module
