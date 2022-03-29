@@ -24,6 +24,24 @@ mattol = 0.001 # tolerance from matlab
     @test pf ≈ pf_NS_M atol = mattol
 end
 
+@testset "MVAR - Vieira Morf" begin
+    (order, pf, A, ef, vic, Vicv) = mvar(u, maxorder=2, method="VM", criterion=nothing)
+    
+    @test order == 2
+
+    A_VM_M = [
+        [0.9821  -25.3824
+            0.0008   -0.0738];;;
+        [-0.3072  -15.8521
+            0.0043   -0.0823]
+    ]   
+    @test A ≈ A_VM_M atol = mattol
+
+    pf_VM_M = [791.3738   -1.6861
+        -1.6116    0.0483]
+    @test pf ≈ pf_VM_M atol = mattol
+end
+
 @testset "MVAR - LS" begin
     (order, pf, A, ef, vic, Vicv) = mvar(u, maxorder=2, method="LS", criterion=nothing)
 

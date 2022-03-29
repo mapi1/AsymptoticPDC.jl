@@ -79,7 +79,7 @@ end
 
 function get_Z(u, order)
     len, nChannels = size(u)
-    Z = zeros(nChannels * order, len)
+    Z = zeros(eltype(u), nChannels * order, len)
     for i in 1:order
         inds = (1:nChannels) .+ nChannels * (i - 1)
         Z[inds, i + 1 : end] = u'[:, 1 : end - i]
@@ -114,4 +114,113 @@ function vech(Y)
         push!(y, Y[i:n,i]...)
     end
     return y
+end
+
+function fIij(i::Int, j::Int, nChannels::Int)
+    Iij = zeros(nChannels^2)
+    Iij[nChannels*(j-1)+i] = 1
+    Iij = diagm(Iij)
+    c = kron(I(2), Iij)
+    return c
+end
+
+function fIj(j::Int, nChannels)
+    Ij = zeros(nChannels)
+    Ij[j] = 1
+    Ij = diagm(Ij)
+    Ij = kron(Ij, Matrix(I, nChannels, nChannels))
+    c = kron(I(2), Ij)
+    return c
+end
+
+
+# Helper converts A into the frequency domain
+function A2f(A::AbstractArray{<:Real}, nFreqs::Int)
+    nChannels = size(A, 1)
+    order = size(A, 3)
+
+    exponents = -reshape((-im * π * kron(0:(nFreqs-1), (1:order)) / nFreqs), order, nFreqs)'
+    Areshaped = reshape(A, nChannels, nChannels, 1, order)
+    Af = zeros(Complex, nChannels, nChannels, nFreqs, order)
+
+    for kk = 1:nFreqs
+        Af[:, :, kk, :] = Areshaped
+    end
+    for i = 1:nChannels
+        for k = 1:nChannels
+            Af[i, k, :, :] = reshape(Af[i, k, :, :], nFreqs, order) .* exp.(exponents)
+        end
+    end
+    Af = permutedims(Af, [3, 1, 2, 4])
+    AL = zeros(Complex, nFreqs, nChannels, nChannels)
+
+    for kk = 1:nFreqs
+        temp = zeros(nChannels, nChannels)
+        for k = 1:order
+            temp = temp + reshape(Af[kk, :, :, k], nChannels, nChannels)
+        end
+        temp = I - temp
+        AL[kk, :, :] = reshape(temp, 1, nChannels, nChannels)
+    end
+    return AL
+end
+
+
+
+# Helper that tries Cholesky factorization an diagonalizes otherwise
+function fChol(omega)
+    L = 0
+    try
+        L = cholesky(omega).L
+        # If there's a small negative eigenvalue, diagonalize
+    catch e
+        println(e)
+        #   disp('linalgerror, probably IP = 1.')
+        ei = eigen(omega)
+        vals, vecs = ei
+        vecs = reverse(vecs, dims=2)
+        reverse!(vals)
+        L = zeros(size(vecs))
+        for i = 1:length(vals)
+            if ei.values[i] < 0
+                ei.values[i] = eps()
+            end
+            L[:, i] = vecs[:, i] .* sqrt(vals[i])
+        end
+    end
+    return L
+end
+
+function fCa(f::Real, order::Int, nChannels::Int)
+    C1 = cos.(-2π * f .* (1:order))
+    S1 = sin.(-2π * f .* (1:order))
+    C2 = [C1 S1]'
+    d = kron(C2, Matrix(I, nChannels^2, nChannels^2))
+    return d
+end
+
+function Dup(n)
+    d = zeros(n * n, Int((n * (n + 1)) / 2))
+    count = 1
+    for j = 1:n, i = 1:n
+        if i >= j
+            d[(j-1)*n+i, count] = 1
+            count = count + 1
+        else
+            d[(j-1)*n+i, :] = d[(i-1)*n+j, :]
+        end
+    end
+    return d
+end
+
+# Helper 
+# Autocorrelation. Data in row-wise orientation. From order 0 to p-1.
+# Output: n x n blocks of autocorr of lags i. (Nuttall Strand matrix)
+function bigautocorr(u, order)
+    len, nChannels = size(u)
+    gamma = zeros(nChannels * order, nChannels * order)
+    for i = 1:order, j = 1:order
+        gamma[((i-1)*nChannels+1):i*nChannels, ((j-1)*nChannels+1):j*nChannels] = lag(u, i - 1, default=zero(u[1]))' * lag(u, j - 1, default=zero(u[1]))
+    end
+    return gamma ./ len
 end
