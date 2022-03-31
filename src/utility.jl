@@ -135,7 +135,7 @@ end
 
 
 # Helper converts A into the frequency domain
-function A2f(A::AbstractArray{<:Real}, nFreqs::Int)
+function A2f(A, nFreqs::Int)
     nChannels = size(A, 1)
     order = size(A, 3)
 
