@@ -72,7 +72,7 @@ function mvar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,
         pf, A, ef = method_ar(u, maxorder)
         vic = nothing
         Vicv = nothing
-        return (maxorder, pf, A, ef, vic, Vicv)
+        return (MCAR_Model(maxorder, A, pf, ef), vic, Vicv)
     else
         throw(DomainError(criterion, "Not a valid information criterion for model selection."))
     end
@@ -99,7 +99,14 @@ function mvar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,
     # eb = [ ] 
     # pb = [ ]
     # return (order,pf,A,pb,B,ef,eb,vic,Vicv)
-    return (order, pf, A, ef, vicv, Vicv)
+    return (MCAR_Model(order, A, pf, ef), vicv, Vicv)
+end
+
+struct MCAR_Model{T<:AbstractArray, U<:AbstractMatrix}
+    order::Int
+    A::T
+    pf::U
+    ef::U
 end
 
 # least squares based estimation of multichannel AR model
@@ -125,14 +132,15 @@ end
 function mc_ar_lc(u, order::Int; method = "NS")
     len, nChannels = size(u)
 
+    input_type = !(eltype(u) <: LinearAlgebra.BlasFloat) ? Float64 : eltype(u) # sylvester() only accepts BlasFloat
     pf = u' * u         # Eq. (15.90)
     pb = copy(pf)       # Eq. (15.90)
-    ef = copy(u)        # Eq. (15.91)
-    eb = copy(u)        # Eq. (15.91)
+    ef = input_type.(u)        # Eq. (15.91)
+    eb = input_type.(u)        # Eq. (15.91)
 
     # Allocate forward and backward autoregressive coefficient matrices
-    A = zeros(nChannels, nChannels, order)
-    B = zeros(nChannels, nChannels, order)
+    A = zeros(input_type, nChannels, nChannels, order)
+    B = zeros(input_type, nChannels, nChannels, order)
 
     # Main Loop - Levinson Recursion 
     for M in 1:order

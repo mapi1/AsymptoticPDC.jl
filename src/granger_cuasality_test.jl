@@ -1,13 +1,13 @@
 """
    granger_causality_test(u, A, pf; α = 0.01, verbose::Bool = true)
 """
-function granger_causality_test(u, A, pf; α=0.01, verbose::Bool=true)
-   nChannels, _, order = size(A)
+function granger_causality_test(u, model; α=0.01, verbose::Bool=true)
+   nChannels, _, order = size(model.A)
    Z = get_Z(u, order)
    gamma = Z * Z'
-   b = reshape(A, nChannels * nChannels * order)
+   b = reshape(model.A, nChannels * nChannels * order)
 
-   n, m = size(pf)
+   n, m = size(model.pf)
    Va = zeros(n, m)
    Tr = zeros(n, m)
    CO = zeros(n, m)
@@ -16,7 +16,7 @@ function granger_causality_test(u, A, pf; α=0.01, verbose::Bool=true)
       for j in 1:n
          if i != j
             CO[i, j] = 1
-            Tr[i, j], Va[i, j], v, th, pValue[i, j] = grangt(CO, b, gamma, pf, 1 - α)
+            Tr[i, j], Va[i, j], v, th, pValue[i, j] = grangt(CO, b, gamma, model.pf, 1 - α)
             CO[i, j] = 0
          end
       end
@@ -65,10 +65,10 @@ end
 """
    instantaneous_granger_causality_test(u, A, pf; α = 0.01, verbose::Bool = true)
 """
-function instantaneous_granger_causality_test(u, A, pf; α=0.01, verbose::Bool=true)
-   nChannels, _, IP = size(A)
+function instantaneous_granger_causality_test(u, model; α=0.01, verbose::Bool=true)
+   nChannels, _, IP = size(model.A)
    N = size(u, 1)
-   n, m = size(pf)
+   n, m = size(model.pf)
    Va = zeros(n, m)
    Tr = zeros(n, m)
    CO = zeros(n, m)
@@ -77,7 +77,7 @@ function instantaneous_granger_causality_test(u, A, pf; α=0.01, verbose::Bool=t
       for j in 1:n
          if i > j
             CO[i, j] = 1
-            Tr[i, j], Va[i, j], v, th, pValue[i, j] = instata(CO, pf, N, 1 - α)
+            Tr[i, j], Va[i, j], v, th, pValue[i, j] = instata(CO, model.pf, N, 1 - α)
             CO[i, j] = 0
             Tr[j, i] = Tr[i, j]
             pValue[j, i] = pValue[i, j]
