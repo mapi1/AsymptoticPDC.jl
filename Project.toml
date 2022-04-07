@@ -1,6 +1,6 @@
-name = "PDC"
+name = "AsymptoticPDC"
 uuid = "af3b36d7-5059-4fcf-8949-d98b87e6cfd5"
-authors = ["Marius Pille <marius.pille@hu-berlin.de>"]
+authors = ["Marius Pille <mapille@uos.de>"]
 version = "0.1.0"
 
 [deps]

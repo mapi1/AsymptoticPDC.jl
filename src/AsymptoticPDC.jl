@@ -1,4 +1,4 @@
-module PDC
+module AsymptoticPDC
 
 using DSP
 using LinearAlgebra
@@ -24,6 +24,5 @@ export granger_causality_test, instantaneous_granger_causality_test
 #Test 
 export spectra
 export coherence
-export bigautocorr, dmatrix, fIij, fIj
 
 end # module

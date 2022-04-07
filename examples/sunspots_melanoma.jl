@@ -1,5 +1,15 @@
+"""
+    get_sunspot_melanoma_data()
+
+This data is from Andrews and Herzberg. D. F. Andrews, A. M. Herzberg. (1985) Data: A Collection of Problems from Many Fields for the Student and Research Worker. Springer, New York.
+
+`u[:, 1]`: Year 1936-1972 
+`u[:, 2]`: Annual male melanoma incidence (age-adjusted per 10e5) in Connecticut
+`u[:, 3]`: Annual total melanoma incidence (age-adjusted per 10e5) in Connecticut
+`u[:, 4]`: Annual sunspot relative number 
+"""
 function get_sunspot_melanoma_data()
-    y = [1936 1.0 0.9 40
+    u = [1936 1.0 0.9 40
         1937 0.8 0.8 115
         1938 0.8 0.8 100
         1939 1.4 1.3 80
@@ -36,5 +46,5 @@ function get_sunspot_melanoma_data()
         1970 5.2 4.8 105
         1971 5.3 4.8 80
         1972 5.3 4.8 65]
-    return y
+    return u
 end
