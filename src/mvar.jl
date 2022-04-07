@@ -33,12 +33,11 @@ Return the tuple (order, pf, A, ef, vic, Vicv), where:
 * Vicv: Vector with all IC values
 """
 function mvar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,String}="AIC", method::String="NS", verbose::Bool=true)
-    len, nChannels = size(u)
-    verbose && @info "$nChannels channels with $len samples."
-    # len > nChannels || throw(ArgumentError("The input u is probably transposed, the number of channels is larger than the channel lengths."))
+    samples, nChannels = size(u)
+    verbose && @info "$nChannels channels with $samples samples."
 
     if maxorder === nothing
-        maxorder = Int(round(3 * sqrt(len) / nChannels)) # Suggested by Nuttall, 1976.
+        maxorder = Int(round(3 * sqrt(samples) / nChannels)) # Suggested by Nuttall, 1976.
         verbose && @info "The maxorder was choosen as $maxorder."
     else
         maxorder >= 1 || throw(DomainError("The maximal order needs to be >= 1, is: $maxorder."))
@@ -70,9 +69,7 @@ function mvar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,
     elseif criterion === nothing
         verbose && @info "Order: $maxorder is fix."
         pf, A, ef = method_ar(u, maxorder)
-        vic = nothing
-        Vicv = nothing
-        return (MCAR_Model(maxorder, A, pf, ef), vic, Vicv)
+        return (MCAR_Model(maxorder, nChannels, samples, A, pf, ef), nothing, nothing)
     else
         throw(DomainError(criterion, "Not a valid information criterion for model selection."))
     end
@@ -84,7 +81,7 @@ function mvar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,
     Vicv = zeros(maxorder)
     while order <= maxorder
         _pf, _A, _ef = method_ar(u, order)
-        vic = ic(len, _pf, nChannels, order)
+        vic = ic(samples, _pf, nChannels, order)
         Vicv[order] = vic
         if vic > vicv
             order -= 1
@@ -99,19 +96,21 @@ function mvar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,
     # eb = [ ] 
     # pb = [ ]
     # return (order,pf,A,pb,B,ef,eb,vic,Vicv)
-    return (MCAR_Model(order, A, pf, ef), vicv, Vicv)
+    return (MCAR_Model(order, nChannels, samples, A, pf, ef), vicv, Vicv)
 end
 
-struct MCAR_Model{T<:AbstractArray, U<:AbstractMatrix}
+struct MCAR_Model{T, U<:AbstractArray{T,3}, V<:AbstractArray{T,2}}
     order::Int
-    A::T
-    pf::U
-    ef::U
+    nChannels::Int
+    samples::Int
+    A::U
+    pf::V
+    ef::V
 end
 
 # least squares based estimation of multichannel AR model
 function mc_ar_ls(u, order)
-    len, nChannels = size(u)
+    samples, nChannels = size(u)
     # Build up regressor matrix
     Z = get_Z(u, order)
 
@@ -120,9 +119,9 @@ function mc_ar_ls(u, order)
     U1 = Gamma \ Z
 
     SU = u' * u - u' * Z' * U1 * u
-    pf = SU / (len - nChannels * order - 1)
-    b = kron(U1, I(nChannels)) * reshape(u', 1, nChannels * len)'
-    ef = reshape(reshape(u', len * nChannels, 1) - kron(Z', I(nChannels)) * b, len, nChannels)
+    pf = SU / (samples - nChannels * order - 1)
+    b = kron(U1, I(nChannels)) * reshape(u', 1, nChannels * samples)'
+    ef = reshape(reshape(u', samples * nChannels, 1) - kron(Z', I(nChannels)) * b, samples, nChannels)
     A = reshape(b, nChannels, nChannels, order)
 
     return pf, A, ef
@@ -130,7 +129,7 @@ end
 
 # multichannel AR based on Nuttal-Strand or Vieira-Morf method
 function mc_ar_lc(u, order::Int; method = "NS")
-    len, nChannels = size(u)
+    samples, nChannels = size(u)
 
     input_type = !(eltype(u) <: LinearAlgebra.BlasFloat) ? Float64 : eltype(u) # sylvester() only accepts BlasFloat
     pf = u' * u         # Eq. (15.90)
@@ -145,9 +144,9 @@ function mc_ar_lc(u, order::Int; method = "NS")
     # Main Loop - Levinson Recursion 
     for M in 1:order
         #  Update estimated covariance errors             - Eq. (15.89)
-        pfhat = ef[M+1:len, :]' * ef[M+1:len, :]
-        pbhat = eb[M:len-1, :]' * eb[M:len-1, :]
-        pfbhat = ef[M+1:len, :]' * eb[M:len-1, :]
+        pfhat = ef[M+1:samples, :]' * ef[M+1:samples, :]
+        pbhat = eb[M:samples-1, :]' * eb[M:samples-1, :]
+        pfbhat = ef[M+1:samples, :]' * eb[M:samples-1, :]
 
         if method == "NS"
             #  Calculate estimated partial correlation matrix - Eq. (15.98)
@@ -184,10 +183,10 @@ function mc_ar_lc(u, order::Int; method = "NS")
         end
 
         Tef = copy(ef)
-        ef[M+1:len, :] = ef[M+1:len, :] + (AM * eb[M:len-1, :]')'   # Eq.(15.84)
-        eb[M+1:len, :] = eb[M:len-1, :] + (BM * Tef[M+1:len, :]')'  # Eq.(15.85
+        ef[M+1:samples, :] = ef[M+1:samples, :] + (AM * eb[M:samples-1, :]')'   # Eq.(15.84)
+        eb[M+1:samples, :] = eb[M:samples-1, :] + (BM * Tef[M+1:samples, :]')'  # Eq.(15.85
     end
-    pf /= len # normalization 
+    pf /= samples # normalization 
     # return pf, -A, pb, -B, ef, eb #,ISTAT
     return pf, -A, ef
 end

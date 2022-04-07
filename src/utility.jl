@@ -87,21 +87,35 @@ function get_Z(u, order)
     return Z
 end
 
-function dmatrix(m)
-    D = zeros(m^2, Int(m * (m + 1) / 2))
-    u = hcat([[i, j] for i in 1:m, j in 1:m]...)'
-    w = hcat([[j, i] for i in 1:m, j in 1:m if i >= j]...)'
-    v = reverse(w, dims = 2)
-    for i=1:m*m
-        for j=1:Int(m*(m+1)/2)
-            if sum(u[i,:] .== v[j,:]) == 2
-                D[i,j]=1
-            end
-        end
-        for j=1:Int(m*(m+1)/2)
-            if sum(u[i,:] .== w[j,:]) == 2
-                D[i,j]=1
-            end
+# function dmatrix(m)
+#     D = zeros(m^2, Int(m * (m + 1) / 2))
+#     u = hcat([[i, j] for i in 1:m, j in 1:m]...)'
+#     w = hcat([[j, i] for i in 1:m, j in 1:m if i >= j]...)'
+#     v = reverse(w, dims = 2)
+#     for i=1:m*m
+#         for j=1:Int(m*(m+1)/2)
+#             if sum(u[i,:] .== v[j,:]) == 2
+#                 D[i,j]=1
+#             end
+#         end
+#         for j=1:Int(m*(m+1)/2)
+#             if sum(u[i,:] .== w[j,:]) == 2
+#                 D[i,j]=1
+#             end
+#         end
+#     end
+#     return D
+# end
+
+function dmatrix(n)
+    D = zeros(n * n, Int((n * (n + 1)) / 2))
+    count = 1
+    for j = 1:n, i = 1:n
+        if i >= j
+            D[(j-1)*n+i, count] = 1
+            count = count + 1
+        else
+            D[(j-1)*n+i, :] = D[(i-1)*n+j, :]
         end
     end
     return D
@@ -117,18 +131,18 @@ function vech(Y)
 end
 
 function fIij(i::Int, j::Int, nChannels::Int)
-    Iij = zeros(nChannels^2)
+    Iij = spzeros(nChannels^2)
     Iij[nChannels*(j-1)+i] = 1
-    Iij = diagm(Iij)
+    Iij = spdiagm(Iij)
     c = kron(I(2), Iij)
     return c
 end
 
 function fIj(j::Int, nChannels)
-    Ij = zeros(nChannels)
+    Ij = spzeros(nChannels)
     Ij[j] = 1
-    Ij = diagm(Ij)
-    Ij = kron(Ij, Matrix(I, nChannels, nChannels))
+    Ij = spdiagm(Ij)
+    Ij = kron(Ij, I(nChannels))
     c = kron(I(2), Ij)
     return c
 end
@@ -167,7 +181,7 @@ end
 
 
 
-# Helper that tries Cholesky factorization an diagonalizes otherwise
+# Helper that tries Cholesky factorization and diagonalizes otherwise
 function fChol(omega)
     L = 0
     try
@@ -175,7 +189,6 @@ function fChol(omega)
         # If there's a small negative eigenvalue, diagonalize
     catch e
         println(e)
-        #   disp('linalgerror, probably IP = 1.')
         ei = eigen(omega)
         vals, vecs = ei
         vecs = reverse(vecs, dims=2)
@@ -191,25 +204,11 @@ function fChol(omega)
     return L
 end
 
-function fCa(f::Real, order::Int, nChannels::Int)
+function fCa(f, order::Int, nChannels::Int)
     C1 = cos.(-2π * f .* (1:order))
     S1 = sin.(-2π * f .* (1:order))
     C2 = [C1 S1]'
-    d = kron(C2, Matrix(I, nChannels^2, nChannels^2))
-    return d
-end
-
-function Dup(n)
-    d = zeros(n * n, Int((n * (n + 1)) / 2))
-    count = 1
-    for j = 1:n, i = 1:n
-        if i >= j
-            d[(j-1)*n+i, count] = 1
-            count = count + 1
-        else
-            d[(j-1)*n+i, :] = d[(i-1)*n+j, :]
-        end
-    end
+    d = kron(sparse(C2), I(nChannels^2))
     return d
 end
 
@@ -219,8 +218,30 @@ end
 function bigautocorr(u, order)
     len, nChannels = size(u)
     gamma = zeros(nChannels * order, nChannels * order)
-    for i = 1:order, j = 1:order
+    @inbounds for i = 1:order, j = 1:order
         gamma[((i-1)*nChannels+1):i*nChannels, ((j-1)*nChannels+1):j*nChannels] = lag(u, i - 1, default=zero(u[1]))' * lag(u, j - 1, default=zero(u[1]))
     end
     return gamma ./ len
+end
+
+function fEig(L, G2)
+    D = L' * G2 * L
+    d = svd(D).S
+    # d = eigvals!(D, 7:8)
+    return sort(d)[end-1:end]
+end
+
+function TT(a,b)
+    t = spzeros(a*b, a*b)
+    for i in 1:a, j in 1:b
+        t[(i-1)*b+j,(j-1)*a+i] = 1
+    end
+    return t
+end
+
+function fdebig_de(n)
+    A = kron(TT(2n, n), sparse(I(2n*n)))
+    B = kron(vec(sparse(I(2*n))), sparse(I(n)))
+    c = A * kron(sparse(I(n)), B)
+    return c
 end

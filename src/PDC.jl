@@ -1,10 +1,11 @@
 module PDC
 
-# using DSP
+using DSP
 using LinearAlgebra
 using ShiftedArrays
 using RecipesBase
 using Distributions
+using SparseArrays
 
 include("mvar.jl")
 include("pdc_algorithm.jl")
@@ -23,5 +24,6 @@ export granger_causality_test, instantaneous_granger_causality_test
 #Test 
 export spectra
 export coherence
+export bigautocorr, dmatrix, fIij, fIj
 
 end # module
