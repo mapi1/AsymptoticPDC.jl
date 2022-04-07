@@ -1,4 +1,4 @@
-using PDC, Test
+using AsymptoticPDC, Test
 
 # Many test build on results from the original Matlab toolbox which serves as the gold standard here
 
