@@ -8,9 +8,10 @@ using Distributions
 using SparseArrays
 
 include("mvar.jl")
-include("pdc_algorithm.jl")
+include("pdc_algorithms.jl")
+include("spectral_algorithms.jl")
 include("plotting_recipes.jl")
-include("granger_cuasality_test.jl")
+include("granger_causality_test.jl")
 include("utility.jl")
 include("../examples/sunspots_melanoma.jl")
 
@@ -20,8 +21,6 @@ export pdcplot, pdcplot!
 export detrend, detrend!
 export get_sunspot_melanoma_data
 export granger_causality_test, instantaneous_granger_causality_test
-
-#Test 
 export spectra
 export coherence
 

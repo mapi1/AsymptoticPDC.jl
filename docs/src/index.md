@@ -2,7 +2,7 @@
 CurrentModule = AsymptoticPDC
 ```
 
-# AsymptoticPDC.jl ♡
+# AsymptoticPDC.jl
 
 ## Package Features
 

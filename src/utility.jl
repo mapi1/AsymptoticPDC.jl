@@ -77,15 +77,25 @@ function retrend()
     #TODO
 end
 
+# function get_Z(u, order)
+#     len, nChannels = size(u)
+#     Z = zeros(eltype(u), nChannels * order, len)
+#     for i in 1:order
+#         inds = (1:nChannels) .+ nChannels * (i - 1)
+#         Z[inds, i + 1 : end] = u'[:, 1 : end - i]
+#     end
+#     return Z
+# end
 function get_Z(u, order)
     len, nChannels = size(u)
-    Z = zeros(eltype(u), nChannels * order, len)
+    Z = zeros(eltype(u), len, nChannels * order)
     for i in 1:order
         inds = (1:nChannels) .+ nChannels * (i - 1)
-        Z[inds, i + 1 : end] = u'[:, 1 : end - i]
+        Z[i + 1 : end, inds] = u[1 : end - i, :]
     end
-    return Z
+    return Z'
 end
+
 
 # function dmatrix(m)
 #     D = zeros(m^2, Int(m * (m + 1) / 2))
@@ -121,13 +131,17 @@ function dmatrix(n)
     return D
 end
 
+# function vech(Y)
+#     m, n = size(Y);
+#     y = eltype(Y)[]
+#     for i=1:m
+#         push!(y, Y[i:n,i]...)
+#     end
+#     return y
+# end
+
 function vech(Y)
-    m, n = size(Y);
-    y = eltype(Y)[]
-    for i=1:m
-        push!(y, Y[i:n,i]...)
-    end
-    return y
+    return nonzeros(sparse(LowerTriangular(Y)))
 end
 
 function fIij(i::Int, j::Int, nChannels::Int)

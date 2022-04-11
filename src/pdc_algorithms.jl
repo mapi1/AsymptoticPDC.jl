@@ -1,99 +1,56 @@
-
-
-
-function coherence(model::MCAR_Model; nFreqs::Int=128, fs=1)
-    spec = spectra(model; nFreqs=nFreqs)
-    coh = _coherence(spec.power)
-    return DSP.Periodograms.Coherence(coh, spec.freq)
-
-end
-
-function _coherence(spec)
-    nChannels = size(spec, 1)
-    nFreqs = size(spec, 3)
-
-    coh = similar(spec)
-    for f in 1:nFreqs
-        for ii in 1:nChannels, jj in 1:nChannels # could be Symmetric
-            coh[jj, ii, f] = spec[jj, ii, f] / sqrt(spec[jj, jj, f] * spec[ii, ii, f])
-        end
-    end
-    return coh
-end
-
-function spectra(model::MCAR_Model; nFreqs::Int=128, fs=1)
-    Af = A2f(model.A, nFreqs)
-    spec = _spectra(Af, model.pf)
-    freq = range(0, 0.5fs, length = nFreqs)
-    return DSP.Periodograms.CrossPowerSpectra(spec, freq)
-end
-
-function _spectra(Af, pf)
-    nChannels = size(Af, 2)
-    nFreqs = size(Af, 1)
-    spec = zeros(eltype(Af), nChannels, nChannels, nFreqs)
-    for f in 1:nFreqs # could be Symmetric
-        H = inv(Af[f, :, :])
-        spec[:, :, f] = H * pf * H'
-    end
-    return spec
-end
-
 """
-pdc(u; nFreqs::Int = 128, metric::String = "euc", maxorder::Int = 30, criterion::Union{Nothing, String} = "AIC", method::String = "NS")
+    pdc(u; nFreqs::Int = 128, α = 0.0, fs = 1, metric::String = "euc", maxorder::Int = 30, criterion::Union{Nothing, String} = "AIC", method::String = "NS")
 
 Computes the partial directed coherence pdc based on a multivariate AR model of the input matrix u containing the signals/channels xi, u = [x1 x2 ... xn] 
 
 # Args
 
-* u::Matrix{<:Real}: input Matrix containing signals 1 to n u = [x1 x2 ... xn]
+* `u`: input Matrix containing signals 1 to n u = [x1 x2 ... xn]
 
 # Keywords
 
-* nFreqs::Int = 124: number of frequencies for which the pdc shall be calculated 
-* metric::String = "euc": If "euc" the basic pdc is returned, else if "diag" a generalized (normalized for different covariances) pdc is returned
-* maxorder::Union{Nothing, Int} = nothing: The maximal order of the AR model, defaults to nothing where the order is choosen based on length and the number of channels (Nuttall 1976)
+* `nFreqs` = 128: number of frequencies for which the pdc shall be calculated 
+* `metric` = "euc": If "euc" the basic pdc is returned, else if "diag" a generalized (normalized for different covariances) pdc is returned
+* `maxorder` = nothing: The maximal order of the AR model, defaults to `nothing` where the maximum order is defined based on length and the number of channels (Nuttall 1976)
 * criterion::String = "AIC": The information criterion used to choose the model order. Use one of the following:
     - "AIC": Akaike's Informaion Criterion
     - "HQ": Hannan Quinn
     - "BIC": Bayesian Information Criterion, Schwarz 1978
     - "FPE": Final prediction error (Akaike, 1970)
     - nothing: maxorder becomes the fixed order
-* method::String = "LS": Method used for etsimation. Use one of:
+* `method` = "LS": Method used for estimation. Use one of:
     - "LS" least squares based on \\ 
     - "NS" Nuttall Strand
 
 # Return 
 
-Return the tuple (pdc , spectra, coh), where:
-
-* pdc: partial directed coherence [n x n x nFreqs]
-* spectra: (Cross-) spectra of the signals [n x n x nFreqs]
-* coh: normal coherence [n x n x nFreqs]
+Returns an object that is a subtype of `AbstractPartialDirectedCoherence` depending on if asymptotic statistics have been calculated.
 """
-function pdc(u; nFreqs::Int=128, α=0.0, fs=1, metric::String="euc", maxorder::Int=30, criterion::Union{Nothing,String}="AIC", method::String="NS", verbose::Bool=true)
+function pdc(u; nFreqs::Int = 128, α = 0.0, fs = 1, metric::String="euc", maxorder::Int=30, criterion::Union{Nothing,String}="AIC", method::String="NS", verbose::Bool=true)
     model, _, _ = mvar(u, maxorder=maxorder, criterion=criterion, method=method, verbose=verbose)
     return pdc(model, u; nFreqs=nFreqs, α=α, fs=fs, metric=metric, verbose=verbose)
 end
 
-function pdc(model::MCAR_Model, u; nFreqs::Int=128, α=0.0, fs=1, metric::String="euc", verbose::Bool=true)
-    if metric == "euc"
-        return original_pdc(model, u; nFreqs=nFreqs, α=α, fs=fs)
-    elseif metric == "diag"
-        return generalized_pdc(model, u; nFreqs=nFreqs, α=α, fs=fs)
-    elseif metric == "info"
-        return information_pdc(model, u; nFreqs=nFreqs, α=α, fs=fs)
+function pdc(model::MCAR_Model, u; nFreqs::Int = 128, α = 0.0, fs = 1, metric::String="euc", verbose::Bool=true)
+    if lower(metric) == "euc"
+        return original_pdc(model, u; nFreqs=nFreqs, α = α, fs = fs)
+    elseif lower(metric) == "diag"
+        return generalized_pdc(model, u; nFreqs=nFreqs, α = α, fs = fs)
+    elseif lower(metric) == "info"
+        return information_pdc(model, u; nFreqs=nFreqs, α = α, fs = fs)
     else
         throw(DomainError(metric, "Invalid metric"))
     end
 end
 
-struct PartialDirectedCoherence{T,F,A<:AbstractArray{T,3}}
+abstract type AbstractPartialDirectedCoherence end
+
+struct PartialDirectedCoherence{T,F,A<:AbstractArray{T,3}} <: AbstractPartialDirectedCoherence
     freq::F
     coherence::A
 end
 
-struct AsymptoticPartialDirectedCoherence{T,F,A<:AbstractArray{T,3}}
+struct AsymptoticPartialDirectedCoherence{T,F,A<:AbstractArray{T,3}} <: AbstractPartialDirectedCoherence
     freq::F
     coherence::A
     lower_conf::A
