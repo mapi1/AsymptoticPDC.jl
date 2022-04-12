@@ -7,7 +7,7 @@ using RecipesBase
 using Distributions
 using SparseArrays
 
-include("mvar.jl")
+include("mcar.jl")
 include("pdc_algorithms.jl")
 include("spectral_algorithms.jl")
 include("plotting_recipes.jl")
@@ -16,7 +16,7 @@ include("utility.jl")
 include("../examples/sunspots_melanoma.jl")
 
 export pdc
-export mvar, MCAR_Model
+export mcar, MCAR_Model
 export pdcplot, pdcplot!
 export detrend, detrend!
 export get_sunspot_melanoma_data

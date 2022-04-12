@@ -1,20 +1,20 @@
 """
-mvar(u::Matrix{<:Real}; maxorder::Union{Nothing, Int} = nothing, criterion::Union{Nothing, String} = "AIC", method::String = "LS"
+    mcar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,String}="AIC", method::String="NS", verbose::Bool=true)
 
-Compute a multivariate AR or vector AR model of the input matrix u containing the signals/channels xi, u = [x1 x2 ... xn] 
+Compute a multichannel AR or vector AR model of the input matrix u containing the signals/channels xi, u = [x1 x2 ... xn] 
 
 # Args
 
-* u::Matrix{<:Real}: input Matrix containing signals 1 to n u = [x1 x2 ... xn]
+* u: input Matrix containing signals 1 to n `u = [x1 x2 ... xn]`
 
 # Keywords
 
-* maxorder::Union{Nothing, Int} = `nothing`: The maximal order of the AR model, defaults to `nothing` where the order is chosen based on length and the number of channels (Nuttall 1976)
-* criterion::String = `AIC`: The information criterion used to choose the model order. Use one of the following:
-    - `AIC`: Akaike's Informaion Criterion
-    - `HQ`: Hannan Quinn
-    - `BIC`: Bayesian Information Criterion, Schwarz 1978
-    - `FPE`: Final prediction error, Akaike, 1970
+* maxorder::Union{Nothing, Int} = `nothing`: The maximal order of the AR model, defaults to `nothing` where the order is chosen based on a simple heuristic (maxorder = 3√samples/nChannels; Nuttall 1976)
+* criterion::String = `"AIC"`: The information criterion used to choose the model order. Use one of the following:
+    - `"AIC"`: Akaike's Informaion Criterion
+    - `"HQ"`: Hannan Quinn
+    - `"BIC"`: Bayesian Information Criterion, Schwarz 1978
+    - `"FPE"`: Final prediction error, Akaike, 1970
     - nothing: maxorder becomes the fixed order
 * method::String = `LS`: Method used for etsimation. Use one of:
     - `LS` least squares based on \\ 
@@ -22,17 +22,17 @@ Compute a multivariate AR or vector AR model of the input matrix u containing th
     - `VM` Vieira-Morf Method (multi-channel generalization of the single-channel geometric lattice algorithm)
 
 # Return 
+Returns a tuple (model, best_ic_value, ic_values)
 
-Return the tuple (order, pf, A, ef, vic, Vicv), where:
-
+Result model is of type `MCAR_Model`, with following fields:
 * order: is the (chosen) model order
-* pf: is the covariance matrix [order x order]
+* nChannels: number of channels
+* samples: number of samples per channel
 * A: contains the AR coefficients [n x n x order]
+* pf: is the covariance matrix [order x order]
 * ef: the residuals
-* vic: the 'optimal' IC value
-* Vicv: Vector with all IC values
 """
-function mvar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,String}="AIC", method::String="NS", verbose::Bool=true)
+function mcar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,String}="AIC", method::String="NS", verbose::Bool=true)
     samples, nChannels = size(u)
     verbose && @info "$nChannels channels with $samples samples."
 
@@ -75,28 +75,22 @@ function mvar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,
     end
 
     # estimate correct order
-    vicv = Inf
-    order = 1
-    pf, A, ef = method_ar(u, order)
-    Vicv = zeros(maxorder)
-    while order <= maxorder
-        _pf, _A, _ef = method_ar(u, order)
-        vic = ic(samples, _pf, nChannels, order)
-        Vicv[order] = vic
-        if vic > vicv
-            order -= 1
-            verbose && @info "Order: $order was chosen by $criterion."
+    best_ic_value = Inf
+    order = 0
+    ic_values = zeros(maxorder)
+    while order < maxorder
+        order += 1
+        pf, A, ef = method_ar(u, order)
+        current_ic = ic(samples, pf, nChannels, order)
+        ic_values[order] = current_ic
+        if current_ic > best_ic_value
             break
         end
-        pf, A, ef = _pf, _A, _ef
-        vicv = vic
-        order += 1
+        best_ic_value = current_ic
     end
-    # B  = [ ] 
-    # eb = [ ] 
-    # pb = [ ]
-    # return (order,pf,A,pb,B,ef,eb,vic,Vicv)
-    return (MCAR_Model(order, nChannels, samples, A, pf, ef), vicv, Vicv)
+    verbose && @info "Order: $order was chosen by $criterion."
+
+    return (MCAR_Model(order, nChannels, samples, A, pf, ef), best_ic_value, ic_values)
 end
 
 struct MCAR_Model{T, U<:AbstractArray{T,3}, V<:AbstractArray{T,2}}

@@ -1,4 +1,4 @@
-(res, vic, Vicv) = mvar((u), maxorder = 2, method = "NS", criterion = nothing)
+(res, vic, Vicv) = mcar((u), maxorder = 2, method = "NS", criterion = nothing)
 
 @testset "Spectra" begin
     

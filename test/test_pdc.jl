@@ -1,4 +1,4 @@
-(model, vic, Vicv) = mvar(u, maxorder=2, method="NS", criterion=nothing)
+(model, vic, Vicv) = mcar(u, maxorder=2, method="NS", criterion=nothing)
 
 @testset "Original PDC" begin
     org_pdc = pdc(model, u; nFreqs=2, metric="euc")

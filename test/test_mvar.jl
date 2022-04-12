@@ -1,7 +1,7 @@
 mattol = 0.001 # tolerance from matlab
 
 @testset "MVAR - Nuttal Strand" begin
-    (model, vic, Vicv) = mvar(u, maxorder=2, method="NS", criterion=nothing)
+    (model, vic, Vicv) = mcar(u, maxorder=2, method="NS", criterion=nothing)
     
     @test model.order == 2
 
@@ -19,7 +19,7 @@ mattol = 0.001 # tolerance from matlab
 end
 
 @testset "MVAR - Vieira Morf" begin
-    (model, vic, Vicv) = mvar(u, maxorder=2, method="VM", criterion=nothing)
+    (model, vic, Vicv) = mcar(u, maxorder=2, method="VM", criterion=nothing)
     
     @test model.order == 2
 
@@ -37,7 +37,7 @@ end
 end
 
 @testset "MVAR - LS" begin
-    (model, vic, Vicv) = mvar(u, maxorder=2, method="LS", criterion=nothing)
+    (model, vic, Vicv) = mcar(u, maxorder=2, method="LS", criterion=nothing)
 
     @test model.order == 2
     A_LS_M = [

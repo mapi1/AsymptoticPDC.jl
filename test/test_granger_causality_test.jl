@@ -7,7 +7,7 @@ u = [sunspots melanoma]
 mattol = 0.001 # tolerance from matlab
 
 @testset "Granger Causality Test" begin
-    (model, _, _) = mvar(u, maxorder=2, method="NS", criterion=nothing)
+    (model, _, _) = mcar(u, maxorder=2, method="NS", criterion=nothing)
     connectivity, pvalues = granger_causality_test(u, model)
       
     @test connectivity[1,2] == 0.0
@@ -18,7 +18,7 @@ mattol = 0.001 # tolerance from matlab
 end
 
 @testset "Instantaneous Granger Causality Test" begin
-    (model, _, _) = mvar(u, maxorder=2, method="NS", criterion=nothing)
+    (model, _, _) = mcar(u, maxorder=2, method="NS", criterion=nothing)
     connectivity, pvalues = instantaneous_granger_causality_test(u, model)
       
     @test connectivity[1,2] == 0.0

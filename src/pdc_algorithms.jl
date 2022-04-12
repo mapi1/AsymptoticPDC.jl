@@ -1,7 +1,8 @@
 """
-    pdc(u; nFreqs::Int = 128, α = 0.0, fs = 1, metric::String = "euc", maxorder::Int = 30, criterion::Union{Nothing, String} = "AIC", method::String = "NS")
+    pdc([model], u; nFreqs::Int = 128, α = 0.0, fs = 1, metric::String="euc", maxorder::Int=30, criterion::Union{Nothing,String}="AIC", method::String="NS", verbose::Bool=true)
 
-Computes the partial directed coherence pdc based on a multivariate AR model of the input matrix u containing the signals/channels xi, u = [x1 x2 ... xn] 
+Computes the partial directed coherence pdc based on a multivariate AR model of the input matrix u containing the signals/channels xi, u = [x1 x2 ... xn].
+If you already fitted a model just put it as first parameter to avoid recalculation. 
 
 # Args
 
@@ -11,32 +12,37 @@ Computes the partial directed coherence pdc based on a multivariate AR model of 
 
 * `nFreqs` = 128: number of frequencies for which the pdc shall be calculated 
 * `metric` = "euc": If "euc" the basic pdc is returned, else if "diag" a generalized (normalized for different covariances) pdc is returned
-* `maxorder` = nothing: The maximal order of the AR model, defaults to `nothing` where the maximum order is defined based on length and the number of channels (Nuttall 1976)
-* criterion::String = "AIC": The information criterion used to choose the model order. Use one of the following:
-    - "AIC": Akaike's Informaion Criterion
-    - "HQ": Hannan Quinn
-    - "BIC": Bayesian Information Criterion, Schwarz 1978
-    - "FPE": Final prediction error (Akaike, 1970)
+* `fs` = 1: sampling frequency in Hz
+* `α` = 0.0: significance level for asymptotic statistics. If 0 no statistics are computed which is faster
+
+The following Keywords are inherited from `mcar` used for model estimation:
+* maxorder::Union{Nothing, Int} = `nothing`: The maximal order of the AR model, defaults to `nothing` where the order is chosen based on a simple heuristic (maxorder = 3√samples/nChannels; Nuttall 1976)
+* criterion::String = `"AIC"`: The information criterion used to choose the model order. Use one of the following:
+    - `"AIC"`: Akaike's Informaion Criterion
+    - `"HQ"`: Hannan Quinn
+    - `"BIC"`: Bayesian Information Criterion, Schwarz 1978
+    - `"FPE"`: Final prediction error, Akaike, 1970
     - nothing: maxorder becomes the fixed order
-* `method` = "LS": Method used for estimation. Use one of:
-    - "LS" least squares based on \\ 
-    - "NS" Nuttall Strand
+* method::String = `LS`: Method used for etsimation. Use one of:
+    - `LS` least squares based on \\ 
+    - `NS` Nuttall-Strand Method (multi-channel generalization of the single-channel Burg lattice algorithm)
+    - `VM` Vieira-Morf Method (multi-channel generalization of the single-channel geometric lattice algorithm)
 
 # Return 
 
 Returns an object that is a subtype of `AbstractPartialDirectedCoherence` depending on if asymptotic statistics have been calculated.
 """
 function pdc(u; nFreqs::Int = 128, α = 0.0, fs = 1, metric::String="euc", maxorder::Int=30, criterion::Union{Nothing,String}="AIC", method::String="NS", verbose::Bool=true)
-    model, _, _ = mvar(u, maxorder=maxorder, criterion=criterion, method=method, verbose=verbose)
+    model, _, _ = mcar(u, maxorder=maxorder, criterion=criterion, method=method, verbose=verbose)
     return pdc(model, u; nFreqs=nFreqs, α=α, fs=fs, metric=metric, verbose=verbose)
 end
 
 function pdc(model::MCAR_Model, u; nFreqs::Int = 128, α = 0.0, fs = 1, metric::String="euc", verbose::Bool=true)
-    if lower(metric) == "euc"
+    if lowercase(metric) == "euc"
         return original_pdc(model, u; nFreqs=nFreqs, α = α, fs = fs)
-    elseif lower(metric) == "diag"
+    elseif lowercase(metric) == "diag"
         return generalized_pdc(model, u; nFreqs=nFreqs, α = α, fs = fs)
-    elseif lower(metric) == "info"
+    elseif lowercase(metric) == "info"
         return information_pdc(model, u; nFreqs=nFreqs, α = α, fs = fs)
     else
         throw(DomainError(metric, "Invalid metric"))

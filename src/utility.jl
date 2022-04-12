@@ -77,15 +77,6 @@ function retrend()
     #TODO
 end
 
-# function get_Z(u, order)
-#     len, nChannels = size(u)
-#     Z = zeros(eltype(u), nChannels * order, len)
-#     for i in 1:order
-#         inds = (1:nChannels) .+ nChannels * (i - 1)
-#         Z[inds, i + 1 : end] = u'[:, 1 : end - i]
-#     end
-#     return Z
-# end
 function get_Z(u, order)
     len, nChannels = size(u)
     Z = zeros(eltype(u), len, nChannels * order)
@@ -95,27 +86,6 @@ function get_Z(u, order)
     end
     return Z'
 end
-
-
-# function dmatrix(m)
-#     D = zeros(m^2, Int(m * (m + 1) / 2))
-#     u = hcat([[i, j] for i in 1:m, j in 1:m]...)'
-#     w = hcat([[j, i] for i in 1:m, j in 1:m if i >= j]...)'
-#     v = reverse(w, dims = 2)
-#     for i=1:m*m
-#         for j=1:Int(m*(m+1)/2)
-#             if sum(u[i,:] .== v[j,:]) == 2
-#                 D[i,j]=1
-#             end
-#         end
-#         for j=1:Int(m*(m+1)/2)
-#             if sum(u[i,:] .== w[j,:]) == 2
-#                 D[i,j]=1
-#             end
-#         end
-#     end
-#     return D
-# end
 
 function dmatrix(n)
     D = zeros(n * n, Int((n * (n + 1)) / 2))
@@ -140,8 +110,17 @@ end
 #     return y
 # end
 
+# all elements of the lower triangular as a vector
 function vech(Y)
-    return nonzeros(sparse(LowerTriangular(Y)))
+    m, n = size(Y)
+    m == n || throw(DomainError("only works on symmetric matrix"))
+    y = Vector{eltype(Y)}(undef, m*m - div((m-1) * m, 2))
+    start = 1
+    for i in 1:m 
+        y[start:start+(n-i)] = Y[i:n,i]
+        start += (n-i+1)
+    end
+    return y
 end
 
 function fIij(i::Int, j::Int, nChannels::Int)
