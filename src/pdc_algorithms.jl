@@ -51,14 +51,16 @@ end
 
 abstract type AbstractPartialDirectedCoherence end
 
-struct PartialDirectedCoherence{T,F,A<:AbstractArray{T,3}} <: AbstractPartialDirectedCoherence
+struct PartialDirectedCoherence{T,F,A<:AbstractArray{T,3},B<:AbstractArray{Complex{T},3}} <: AbstractPartialDirectedCoherence
     freq::F
     coherence::A
+    spectra::B
 end
 
-struct AsymptoticPartialDirectedCoherence{T,F,A<:AbstractArray{T,3}} <: AbstractPartialDirectedCoherence
+struct AsymptoticPartialDirectedCoherence{T,F,A<:AbstractArray{T,3},B<:AbstractArray{Complex{T},3}} <: AbstractPartialDirectedCoherence
     freq::F
     coherence::A
+    spectra::B
     lower_conf::A
     upper_conf::A
     pvalues::A
@@ -73,7 +75,6 @@ function original_pdc(model, u; nFreqs=128, α=0.0, fs=1)
 
     # get spectra as well, as AR is already fitted
     spec = _spectra(Af, model.pf)
-    coh = _coherence(spec)
 
     # asymptotic statistics
     calculate_asymptotic = !iszero(α)
@@ -105,9 +106,9 @@ function original_pdc(model, u; nFreqs=128, α=0.0, fs=1)
     end
     freq = range(0, 0.5fs, length = nFreqs)
     if calculate_asymptotic
-        return AsymptoticPartialDirectedCoherence(freq, pdc_res, intermediary.lower_conf, intermediary.upper_conf, intermediary.pvalues, intermediary.threshold) 
+        return AsymptoticPartialDirectedCoherence(freq, pdc_res, spec, intermediary.lower_conf, intermediary.upper_conf, intermediary.pvalues, intermediary.threshold) 
     else
-        return PartialDirectedCoherence(freq, pdc_res) 
+        return PartialDirectedCoherence(freq, pdc_res, spec) 
     end
 end
 
@@ -199,7 +200,6 @@ function generalized_pdc(model, u; nFreqs=128, α=0.0, fs=1)
 
     # get spectra as well, as AR is already fitted
     spec = _spectra(Af, model.pf)
-    coh = _coherence(spec)
 
     # asymptotic statistics
     calculate_asymptotic = !iszero(α)
@@ -261,7 +261,6 @@ function information_pdc(model, u; nFreqs=128, α=0.0, fs=1)
 
     # get spectra as well, as AR is already fitted
     spec = _spectra(Af, model.pf)
-    coh = _coherence(spec)
 
     # asymptotic statistics
     calculate_asymptotic = !iszero(α)

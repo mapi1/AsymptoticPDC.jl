@@ -171,7 +171,7 @@ function A2f(A, nFreqs::Int)
 
     exponents = -reshape((-im * π * kron(0:(nFreqs-1), (1:order)) / nFreqs), order, nFreqs)'
     Areshaped = reshape(A, nChannels, nChannels, 1, order)
-    Af = zeros(Complex, nChannels, nChannels, nFreqs, order)
+    Af = zeros(Complex{eltype(A)}, nChannels, nChannels, nFreqs, order)
 
     for kk = 1:nFreqs
         Af[:, :, kk, :] = Areshaped
@@ -182,7 +182,7 @@ function A2f(A, nFreqs::Int)
         end
     end
     Af = permutedims(Af, [3, 1, 2, 4])
-    AL = zeros(Complex, nFreqs, nChannels, nChannels)
+    AL = zeros(Complex{eltype(A)}, nFreqs, nChannels, nChannels)
 
     for kk = 1:nFreqs
         temp = zeros(nChannels, nChannels)

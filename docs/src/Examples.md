@@ -8,6 +8,8 @@ The data can be obtained through the following helper function
 get_sunspot_melanoma_data
 ```
 
+### Setup
+
 A first look at the detrended data
 
 ```@setup sunspot_melanoma
@@ -25,6 +27,7 @@ p2 = plot(t, sunspots, lab = "Detrended annual sunpot number")
 plot(p1, p2, layout = (2, 1))
 ```
 
+### Estimation
 Estimate the model parameters using `mcar`
 
 ```@example sunspot_melanoma
@@ -32,10 +35,16 @@ y = [melanoma sunspots]
 model, _, _ = mcar(y)
 ```
 
+### Connectivity
+
 Perform a Granger causality test to get a connectivity matrix
 
 ```@example sunspot_melanoma
-granger_causality_test(y, model);
+connectivity, pvalues = granger_causality_test(model, y);
+println("Connectivity matrix:")
+display(connectivity)
+println("Granger causality test p-values:")
+display(pvalues)
 ```
 
 Original PDC analysis

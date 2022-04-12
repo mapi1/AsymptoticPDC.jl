@@ -6,11 +6,10 @@ pdcplot(pdc, spectra)
 @userplot PDCplot
 
 @recipe function f(h::PDCplot; sf = nothing, f_range = (0, 0.5), cnames = nothing)
-    # input processing
-    length(h.args) == 2 || throw(ArgumentError("pdcplot needs pdc and spectra as input"))
-    length(f_range) == 2 || throw(ArgumentError("if the frequency range shall be specified a start and stop frequency are needed: (start, stop)"))
-    pdc, spectra = h.args
-    size(pdc) == size(spectra) || throw(DomainError("pdc and spectra have not the same size, are thex from the same data?"))
+    typeof(h.args[1]) <: AbstractPartialDirectedCoherence || throw(DomainError("Input must be <: AbstractPartialDirectedCoherence"))
+    
+    pdc = h.args[1].coherence 
+    spectra = h.args[1].spectra
     
     nChannels = size(pdc, 1)
     nFreqs = size(pdc, 3)
