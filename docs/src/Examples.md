@@ -41,14 +41,22 @@ Perform a Granger causality test to get a connectivity matrix
 
 ```@example sunspot_melanoma
 connectivity, pvalues = granger_causality_test(model, y);
-println("Connectivity matrix:")
-display(connectivity)
-println("Granger causality test p-values:")
-display(pvalues)
+println("Connectivity matrix:") # hide
+println(connectivity) # hide
+println("Granger causality test p-values:") # hide
+println(pvalues) # hide
 ```
 
 Original PDC analysis
 
 ```@example sunspot_melanoma
 original_pdc = pdc(model, y; metric = "euc")
+pdcplot(original_pdc, cnames = ["Melanoma", "Sunspots"])
+```
+
+Generalized PDC analysis
+
+```@example sunspot_melanoma
+generalized_pdc = pdc(model, y; metric = "diag")
+pdcplot(generalized_pdc, cnames = ["Melanoma", "Sunspots"])
 ```
