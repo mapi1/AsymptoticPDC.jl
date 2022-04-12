@@ -1,7 +1,7 @@
 """
-   granger_causality_test(u, A, pf; α = 0.01, verbose::Bool = true)
+   granger_causality_test(model, u; α = 0.01, verbose::Bool = true)
 """
-function granger_causality_test(u, model; α=0.01, verbose::Bool=true)
+function granger_causality_test(model, u; α=0.01, verbose::Bool=true)
    nChannels, _, order = size(model.A)
    Z = get_Z(u, order)
    gamma = Z * Z'
@@ -63,9 +63,9 @@ function grangt(CO, b, G, SU, significance)
 end
 
 """
-   instantaneous_granger_causality_test(u, A, pf; α = 0.01, verbose::Bool = true)
+   instantaneous_granger_causality_test(model, u; α = 0.01, verbose::Bool = true)
 """
-function instantaneous_granger_causality_test(u, model; α=0.01, verbose::Bool=true)
+function instantaneous_granger_causality_test(model, u; α=0.01, verbose::Bool=true)
    nChannels, _, IP = size(model.A)
    N = size(u, 1)
    n, m = size(model.pf)

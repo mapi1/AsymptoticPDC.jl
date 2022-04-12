@@ -16,6 +16,7 @@ makedocs(;
         "MCAR Model" => "MCAR.md",
         "Partial Directed Coherence" => "PDC.md",
         "Statistical Tests" => "Stat_Tests.md",
+        "Utilities" => "Utilities.md",
         "Examples" => "Examples.md"
     ],
 )

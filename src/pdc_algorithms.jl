@@ -16,17 +16,17 @@ If you already fitted a model just put it as first parameter to avoid recalculat
 * `α` = 0.0: significance level for asymptotic statistics. If 0 no statistics are computed which is faster
 
 The following Keywords are inherited from `mcar` used for model estimation:
-* maxorder::Union{Nothing, Int} = `nothing`: The maximal order of the AR model, defaults to `nothing` where the order is chosen based on a simple heuristic (maxorder = 3√samples/nChannels; Nuttall 1976)
-* criterion::String = `"AIC"`: The information criterion used to choose the model order. Use one of the following:
-    - `"AIC"`: Akaike's Informaion Criterion
-    - `"HQ"`: Hannan Quinn
-    - `"BIC"`: Bayesian Information Criterion, Schwarz 1978
-    - `"FPE"`: Final prediction error, Akaike, 1970
-    - nothing: maxorder becomes the fixed order
-* method::String = `LS`: Method used for etsimation. Use one of:
-    - `LS` least squares based on \\ 
-    - `NS` Nuttall-Strand Method (multi-channel generalization of the single-channel Burg lattice algorithm)
-    - `VM` Vieira-Morf Method (multi-channel generalization of the single-channel geometric lattice algorithm)
+    * maxorder::Union{Nothing, Int} = `nothing`: The maximal order of the AR model, defaults to `nothing` where the order is chosen based on a simple heuristic (maxorder = 3√samples/nChannels; Nuttall 1976)
+    * criterion = `"AIC"`: The information criterion used to choose the model order. Use one of the following:
+        - `"AIC"`: Akaike's Informaion Criterion
+        - `"HQ"`: Hannan Quinn
+        - `"BIC"`: Bayesian Information Criterion, Schwarz 1978
+        - `"FPE"`: Final prediction error, Akaike, 1970
+        - nothing: maxorder becomes the fixed order
+    * method = `"LS"`: Method used for etsimation. Use one of:
+        - `"LS"` least squares based on \\ 
+        - `"NS"` Nuttall-Strand Method (multi-channel generalization of the single-channel Burg lattice algorithm)
+        - `"VM"` Vieira-Morf Method (multi-channel generalization of the single-channel geometric lattice algorithm)
 
 # Return 
 

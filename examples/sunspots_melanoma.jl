@@ -3,10 +3,12 @@
 
 This data is from Andrews and Herzberg. D. F. Andrews, A. M. Herzberg. (1985) Data: A Collection of Problems from Many Fields for the Student and Research Worker. Springer, New York.
 
-`u[:, 1]`: Year 1936-1972 
-`u[:, 2]`: Annual male melanoma incidence (age-adjusted per 10e5) in Connecticut
-`u[:, 3]`: Annual total melanoma incidence (age-adjusted per 10e5) in Connecticut
-`u[:, 4]`: Annual sunspot relative number 
+Returns `u`:
+
+* `u[:, 1]`: Year 1936-1972 
+* `u[:, 2]`: Annual male melanoma incidence (age-adjusted per 10e5) in Connecticut
+* `u[:, 3]`: Annual total melanoma incidence (age-adjusted per 10e5) in Connecticut
+* `u[:, 4]`: Annual sunspot relative number 
 """
 function get_sunspot_melanoma_data()
     u = [1936 1.0 0.9 40

@@ -38,6 +38,29 @@
 # detrend(x, 1) # detrend order one
 # detrend(x, [1]) # detrend coeff one
 
+
+"""
+    detrend(signal::AbstractVector, order::Int=1; verbose::Bool=true)
+
+Detrend a signal by removing polynomial trend of order `p` using build in least squares \\.
+
+# Args:
+*   `signal` Data Vector containing te signal
+*   `order`=1: order of polynomial
+
+# Return:
+* (detrended_signal, coefs): The detrended signal and the estimated coefficients from order 0 to  p
+
+# Examples
+```julia
+julia> signal = sin.([1:100;]) + 0.03 .* [1:100;] .+ 1
+julia> _, coefficients = detrend(signal)
+julia> coefficients
+2-element Vector{Float64}:
+ 1.0583465387418984
+ 0.028819440616267268
+```
+"""
 function detrend(signal::AbstractVector, order::Int=1; verbose::Bool=true)
     order >= 0 || throw(DomainError("Order p hast to be positive or zero, is: $order"))
     verbose && @info "polynomial detrending of order $order"

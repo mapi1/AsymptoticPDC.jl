@@ -10,16 +10,16 @@ Compute a multichannel AR or vector AR model of the input matrix u containing th
 # Keywords
 
 * maxorder::Union{Nothing, Int} = `nothing`: The maximal order of the AR model, defaults to `nothing` where the order is chosen based on a simple heuristic (maxorder = 3√samples/nChannels; Nuttall 1976)
-* criterion::String = `"AIC"`: The information criterion used to choose the model order. Use one of the following:
+* criterion = `"AIC"`: The information criterion used to choose the model order. Use one of the following:
     - `"AIC"`: Akaike's Informaion Criterion
     - `"HQ"`: Hannan Quinn
     - `"BIC"`: Bayesian Information Criterion, Schwarz 1978
     - `"FPE"`: Final prediction error, Akaike, 1970
     - nothing: maxorder becomes the fixed order
-* method::String = `LS`: Method used for etsimation. Use one of:
-    - `LS` least squares based on \\ 
-    - `NS` Nuttall-Strand Method (multi-channel generalization of the single-channel Burg lattice algorithm)
-    - `VM` Vieira-Morf Method (multi-channel generalization of the single-channel geometric lattice algorithm)
+* method = `"LS"`: Method used for etsimation. Use one of:
+    - `"LS"` least squares based on \\ 
+    - `"NS"` Nuttall-Strand Method (multi-channel generalization of the single-channel Burg lattice algorithm)
+    - `"VM"` Vieira-Morf Method (multi-channel generalization of the single-channel geometric lattice algorithm)
 
 # Return 
 Returns a tuple (model, best_ic_value, ic_values)
@@ -38,7 +38,7 @@ function mcar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,
 
     if maxorder === nothing
         maxorder = Int(round(3 * sqrt(samples) / nChannels)) # Suggested by Nuttall, 1976.
-        verbose && @info "The maxorder was choosen as $maxorder."
+        verbose && @info "The maxorder was set to $maxorder."
     else
         maxorder >= 1 || throw(DomainError("The maximal order needs to be >= 1, is: $maxorder."))
     end
@@ -84,15 +84,25 @@ function mcar(u; maxorder::Union{Nothing,Int}=nothing, criterion::Union{Nothing,
         current_ic = ic(samples, pf, nChannels, order)
         ic_values[order] = current_ic
         if current_ic > best_ic_value
+            order -= 1
             break
         end
         best_ic_value = current_ic
     end
-    verbose && @info "Order: $order was chosen by $criterion."
+    verbose && @info "Order: $order was selected by $criterion."
 
     return (MCAR_Model(order, nChannels, samples, A, pf, ef), best_ic_value, ic_values)
 end
 
+"""
+`MCAR_Model` with following fields:
+* order: is the (chosen) model order
+* nChannels: number of channels
+* samples: number of samples per channel
+* A: contains the AR coefficients [n x n x order]
+* pf: is the covariance matrix [order x order]
+* ef: the residuals    
+"""
 struct MCAR_Model{T, U<:AbstractArray{T,3}, V<:AbstractArray{T,2}}
     order::Int
     nChannels::Int
