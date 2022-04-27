@@ -198,6 +198,28 @@ end
 
 
 # Helper that tries Cholesky factorization and diagonalizes otherwise
+# function fChol_old(omega)
+#     L = 0
+#     try
+#         L = cholesky(omega).L
+#         # If there's a small negative eigenvalue, diagonalize
+#     catch e
+#         println(e)
+#         ei = eigen(omega)
+#         vals, vecs = ei
+#         vecs = reverse(vecs, dims=2)
+#         reverse!(vals)
+#         L = zeros(size(vecs))
+#         for i = 1:length(vals)
+#             if ei.values[i] < 0
+#                 ei.values[i] = eps()
+#             end
+#             L[:, i] = vecs[:, i] .* sqrt(vals[i])
+#         end
+#     end
+#     return L
+# end
+
 function fChol(omega)
     L = 0
     try
@@ -205,14 +227,13 @@ function fChol(omega)
         # If there's a small negative eigenvalue, diagonalize
     catch e
         println(e)
-        ei = eigen(omega)
-        vals, vecs = ei
-        vecs = reverse(vecs, dims=2)
+        vals, vecs = eigen(omega)
+        reverse!(vecs, dims=2)
         reverse!(vals)
-        L = zeros(size(vecs))
+        L = zeros(ComplexF64, size(vecs))
         for i = 1:length(vals)
-            if ei.values[i] < 0
-                ei.values[i] = eps()
+            if real(vals[i]) < 0
+                vals[i] = eps()
             end
             L[:, i] = vecs[:, i] .* sqrt(vals[i])
         end
