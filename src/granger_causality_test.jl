@@ -26,12 +26,12 @@ function granger_causality_test(model, u; α=0.01, verbose::Bool=true)
       println("======================================================================")
       println("Connectivity matrix:")
       Tr[I(nChannels)] .= NaN
-      display(Tr)
+      show(stdout, "text/plain", Tr)
       println()
 
       println("Granger causality test p-values:")
       pValue[I(nChannels)] .= NaN
-      display(pValue)
+      show(stdout, "text/plain", pValue)
       println()
       println("======================================================================")
    end
