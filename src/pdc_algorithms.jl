@@ -61,6 +61,7 @@ struct AsymptoticPartialDirectedCoherence{T,F,A<:AbstractArray{T,3},B<:AbstractA
     freq::F
     coherence::A
     spectra::B
+    α
     lower_conf::A
     upper_conf::A
     pvalues::A
@@ -106,7 +107,7 @@ function original_pdc(model, u; nFreqs=128, α=0.0, fs=1)
     end
     freq = range(0, 0.5fs, length = nFreqs)
     if calculate_asymptotic
-        return AsymptoticPartialDirectedCoherence(freq, pdc_res, spec, intermediary.lower_conf, intermediary.upper_conf, intermediary.pvalues, intermediary.threshold) 
+        return AsymptoticPartialDirectedCoherence(freq, pdc_res, spec, α, intermediary.lower_conf, intermediary.upper_conf, intermediary.pvalues, intermediary.threshold) 
     else
         return PartialDirectedCoherence(freq, pdc_res, spec) 
     end
@@ -240,7 +241,7 @@ function generalized_pdc(model, u; nFreqs=128, α=0.0, fs=1)
     end
     freq = range(0, 0.5fs, length = nFreqs)
     if calculate_asymptotic
-        return AsymptoticPartialDirectedCoherence(freq, pdc_res, spec, intermediary.lower_conf, intermediary.upper_conf, intermediary.pvalues, intermediary.threshold) 
+        return AsymptoticPartialDirectedCoherence(freq, pdc_res, spec, α, intermediary.lower_conf, intermediary.upper_conf, intermediary.pvalues, intermediary.threshold) 
     else
         return PartialDirectedCoherence(freq, pdc_res, spec) 
     end 
@@ -304,7 +305,7 @@ function information_pdc(model, u; nFreqs=128, α=0.0, fs=1)
     end
     freq = range(0, 0.5fs, length = nFreqs)
     if calculate_asymptotic
-        return AsymptoticPartialDirectedCoherence(freq, pdc_res, spec, intermediary.lower_conf, intermediary.upper_conf, intermediary.pvalues, intermediary.threshold) 
+        return AsymptoticPartialDirectedCoherence(freq, pdc_res, spec, α, intermediary.lower_conf, intermediary.upper_conf, intermediary.pvalues, intermediary.threshold) 
     else
         return PartialDirectedCoherence(freq, pdc_res, spec) 
     end 

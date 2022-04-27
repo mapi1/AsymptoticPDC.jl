@@ -1,62 +1,77 @@
 
 
 """
-pdcplot(pdc, spectra)
+pdcplot(apdc<:AbstractPartialDirectedCoherence)
 """
 @userplot PDCplot
 
-@recipe function f(h::PDCplot; sf = nothing, f_range = (0, 0.5), cnames = nothing)
+@recipe function f(h::PDCplot; f_range = (0, 0.5), cnames = nothing)
     typeof(h.args[1]) <: AbstractPartialDirectedCoherence || throw(DomainError("Input must be <: AbstractPartialDirectedCoherence"))
     
-    pdc = h.args[1].coherence 
-    spectra = h.args[1].spectra
+    data = h.args[1]
+    coherence = data.coherence 
+    spectra = data.spectra
+    f = data.freq
+    with_asymptotic = typeof(data) <: AsymptoticPartialDirectedCoherence
     
-    nChannels = size(pdc, 1)
-    nFreqs = size(pdc, 3)
+    nChannels = size(coherence, 1)
     
     if cnames === nothing
         cnames = "x" .* string.(collect(1:nChannels))
     else
         length(cnames) == nChannels || throw(ArgumentError("There needs to be a name for each channel."))
     end
-    
-    f = range(f_range[1], stop = f_range[2], length = nFreqs)
-    if sf === nothing
-        f_flag = "c/b"
-    else
-        f = f .* sf
-        f_flag = "Hz"
-    end
+
     # plot design
-    # title := "PDC"
     layout := (nChannels, nChannels)
     
     for j in 1:nChannels, i in 1:nChannels
-        if i != j
+        if i == 1
+            title := "$(cnames[j])"
+        else
+            title := ""
+        end
+        if i != j 
             @series begin
+                if with_asymptotic
+                    @series begin
+                        subplot := ((i-1)*nChannels + j)
+                        seriestype := :vspan
+                        seriescolor := :grey
+                        linewidth := 0
+                        alpha := 0.5
+                        label := ""
+                        significant = [false; data.pvalues[i,j,:] .< data.α]
+                        inds = findall(x -> !iszero(x), diff(significant))
+                        f[inds]
+    
+                    end
+                end
+
+                seriescolor := :orangered2
                 subplot := ((i-1)*nChannels + j)
                 label := "$(cnames[i]) <- $(cnames[j])" 
                 ylims := (0,1)
-                if j == 1 
-                    ylabel := cnames[i]
+                if with_asymptotic
+                    ribbon := (abs.(data.lower_conf[i,j,:] .- coherence[i,j,:]), data.upper_conf[i,j,:] .- coherence[i,j,:])
                 end
                 if i == nChannels
-                    xlabel := "f [$f_flag]"
+                    xlabel := "f"
                 end
                 
-                f, vec(pdc[i,j,:])
+                f, vec(coherence[i,j,:])
             end
         else
             @series begin
                 subplot := ((i-1)*nChannels + j)
-                label := "S $(cnames[i])(f)"
+                label := "S $(cnames[i])"
                 seriescolor := :black
                 linewidth := 2
-                if j == 1 
-                    ylabel := cnames[i]
-                end
+                # if j == 1 
+                #     ylabel := cnames[i]
+                # end
                 if i == nChannels
-                    xlabel := "f [$f_flag]"
+                    xlabel := "f"
                 end
                 
                 f, vec(2abs.(spectra[i,j,:]))
