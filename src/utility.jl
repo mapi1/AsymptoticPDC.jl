@@ -93,6 +93,21 @@ function detrend(signal::AbstractVector, coeffs::AbstractVector; verbose::Bool=t
     return (signal .- trend), coeffs
 end
 
+"""
+    detrend(signals::AbstractArray, order::Int = 1; verbose = false, dims::Int = 1)
+
+Deterend an array `signals` along dimension `dims`.
+"""
+function detrend(signals::AbstractArray, order::Int = 1; verbose = false, dims::Int = 1)
+    coeffs = [] 
+    detrended_signals = mapslices(signals; dims = dims) do signal
+        sig, coeff = detrend(signal, order; verbose = verbose)
+        push!(coeffs, coeff)
+        sig
+    end
+    return detrended_signals, coeffs
+end
+
 function detrend!(signal::AbstractVector; p::Int=1)
 
 end
